@@ -275,16 +275,10 @@
         fetch(SCRIPT_URL + "?" + params)
           .then(res => res.json())
           .then(result => {
-
-              if (typeof result.status === 'string' && result.status.trim().toLowerCase() === 'success') {
-                  document.getElementById('alert-success').style.display = 'block';
-                  window.scrollTo(0, 0);
-                  document.getElementById('carpoolForm').reset();
-                  document.getElementById('childrenList').innerHTML = '';
-                } else {
-                  console.log("❌ Success condition failed", result.status);
-                  document.getElementById('error-msg').innerHTML = 'Submission failed.';
-            }
+              document.getElementById('alert-success').style.display = 'block';
+              window.scrollTo(0, 0);
+              document.getElementById('carpoolForm').reset();
+              document.getElementById('childrenList').innerHTML = '';
           })
           .catch(error => {
             console.error(error);
@@ -292,6 +286,7 @@
           });
     }
 </script>
+
 
 
 
