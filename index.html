@@ -144,7 +144,7 @@
         <h2>Carpool Change Request</h2>
     </div>
     <div class="card-body">
-        <div class="alert alert-success d-none" style="padding: 10px">Request Submitted Successfully!</div>
+        <div class="alert alert-success" style="padding: 10px; display: none">Request Submitted Successfully!</div>
         <p id="statusMessage" class="m-0"></p>
         <form id="carpoolForm">
             <div class="input-group">
@@ -275,13 +275,14 @@
         fetch(SCRIPT_URL + "?" + params)
           .then(res => res.json())
           .then(result => {
-              document.getElementById('alert-success').style.display = 'block';
+              document.getElementsByClassName('alert-success')[0].style.display = 'block'
               window.scrollTo(0, 0);
               document.getElementById('carpoolForm').reset();
               document.getElementById('childrenList').innerHTML = '';
           });
     }
 </script>
+
 
 
 
