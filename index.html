@@ -276,14 +276,14 @@
           .then(res => res.json())
           .then(result => {
 
-              console.log(result);
-            if (result.status == 'success') {
-              document.getElementById('alert-success').style.display = 'block';
-              window.scrollTo(0, 0);
-              document.getElementById('carpoolForm').reset();
-              document.getElementById('childrenList').innerHTML = '';
-            } else {
-              document.getElementById('error-msg').innerHTML = 'Submission failed.';
+              if (typeof result.status === 'string' && result.status.trim().toLowerCase() === 'success') {
+                  document.getElementById('alert-success').style.display = 'block';
+                  window.scrollTo(0, 0);
+                  document.getElementById('carpoolForm').reset();
+                  document.getElementById('childrenList').innerHTML = '';
+                } else {
+                  console.log("❌ Success condition failed", result.status);
+                  document.getElementById('error-msg').innerHTML = 'Submission failed.';
             }
           })
           .catch(error => {
@@ -292,6 +292,7 @@
           });
     }
 </script>
+
 
 
 
