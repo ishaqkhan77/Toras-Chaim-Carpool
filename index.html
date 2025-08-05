@@ -193,7 +193,10 @@
     </div>
     <div class="card-footer">
         <span id="error-msg"></span>
-        <button onclick="handleSubmit()">Submit</button>
+        <button id="submitBtn" onclick="handleSubmit()">
+          <span class="btn-text">Submit</span>
+          <span class="btn-loader" style="display: none;"><img src="/loader.gif"></span>
+        </button>
     </div>
 </div>
 
@@ -261,6 +264,11 @@
             document.getElementById('error-msg').innerHTML = '';
         }
 
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.querySelector('.btn-text').style.display = 'none';
+        submitBtn.querySelector('.btn-loader').style.display = 'inline-block';
+
         const params = new URLSearchParams({
             carpoolId: carpoolId,
             firstName: firstName,
@@ -279,9 +287,14 @@
               window.scrollTo(0, 0);
               document.getElementById('carpoolForm').reset();
               document.getElementById('childrenList').innerHTML = '';
+
+            submitBtn.disabled = false;
+            submitBtn.querySelector('.btn-text').style.display = 'inline';
+            submitBtn.querySelector('.btn-loader').style.display = 'none';
           });
     }
 </script>
+
 
 
 
