@@ -209,7 +209,7 @@
         container.innerHTML = '';
 
         try {
-            const res = await fetch(`${SCRIPT_URL}?carpool_id=${encodeURIComponent(carpoolId)}`);
+            const res = await fetch(`${SCRIPT_URL}?carpoolId=${encodeURIComponent(carpoolId)}`);
             const children = await res.json();
 
             if (!children.length) {
@@ -325,6 +325,7 @@
        //  }
     }
 </script>
+
 
 
 
