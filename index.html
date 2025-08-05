@@ -261,42 +261,71 @@
             document.getElementById('error-msg').innerHTML = '';
         }
 
-        const formData = new URLSearchParams();
-        formData.append("carpoolId", carpoolId);
-        formData.append("firstName", firstName);
-        formData.append("lastName", lastName);
-        formData.append("email", email);
-        formData.append("requestType", requestType);
-        formData.append("children", children);
-        formData.append("replacementEmail", replacementEmail);
-        
-       try {
-            const response = await fetch(SCRIPT_URL, {
-                method: "POST",
-                body: formData,
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
-                },
-                redirect: "follow"
-            });
+        const params = new URLSearchParams({
+            carpoolId: carpoolId,
+            firstName: firstName,
+            lastName: lastName,
+            email: email,
+            requestType: requestType,
+            children: children,
+            replacementEmail: replacementEmail,
+            submit: "true"
+        }).toString();
 
-            const result = await response.json();
-    
+        fetch(SCRIPT_URL + "?" + params)
+          .then(res => res.json())
+          .then(result => {
             if (result.status === 'success') {
-                document.getElementById('alert-success').style.display = 'block';
-                window.scrollTo(0, 0);
-                document.getElementById('carpoolForm').reset();
-                document.getElementById('childrenList').innerHTML = '';
+              document.getElementById('alert-success').style.display = 'block';
+              window.scrollTo(0, 0);
+              document.getElementById('carpoolForm').reset();
+              document.getElementById('childrenList').innerHTML = '';
             } else {
-                document.getElementById('error-msg').innerHTML = 'Submission failed.';
+              document.getElementById('error-msg').innerHTML = 'Submission failed.';
             }
+          })
+          .catch(error => {
+            console.error(error);
+            document.getElementById('error-msg').innerHTML = 'Submission failed.';
+          });
 
-        } catch (err) {
-            document.getElementById('error-msg').innerHTML = 'Network error. Please try again.';
-            console.error(err);
-        }
+       //  const formData = new URLSearchParams();
+       //  formData.append("carpoolId", carpoolId);
+       //  formData.append("firstName", firstName);
+       //  formData.append("lastName", lastName);
+       //  formData.append("email", email);
+       //  formData.append("requestType", requestType);
+       //  formData.append("children", children);
+       //  formData.append("replacementEmail", replacementEmail);
+        
+       // try {
+       //      const response = await fetch(SCRIPT_URL, {
+       //          method: "POST",
+       //          body: formData,
+       //          headers: {
+       //              "Content-Type": "application/x-www-form-urlencoded"
+       //          },
+       //          redirect: "follow"
+       //      });
+
+       //      const result = await response.json();
+    
+       //      if (result.status === 'success') {
+       //          document.getElementById('alert-success').style.display = 'block';
+       //          window.scrollTo(0, 0);
+       //          document.getElementById('carpoolForm').reset();
+       //          document.getElementById('childrenList').innerHTML = '';
+       //      } else {
+       //          document.getElementById('error-msg').innerHTML = 'Submission failed.';
+       //      }
+
+       //  } catch (err) {
+       //      document.getElementById('error-msg').innerHTML = 'Network error. Please try again.';
+       //      console.error(err);
+       //  }
     }
 </script>
+
 
 
 
