@@ -89,6 +89,13 @@
             box-shadow: 0 0 10px 0 #eaeaea;
         }
 
+        .rp-txt {
+            text-align: center;
+            font-weight: 600;
+            color: #4f4f4f;
+            font-size: 1.2rem;
+        }
+
         button {
             padding: 10px 20px;
             background-color: #4caf50;
@@ -108,15 +115,36 @@
             margin-bottom: 10px;
         }
 
-        #childrenList span{
+        #childrenMessage{
             color: #8b8b8b;
             margin-bottom: 10px;
+            position: relative;
+            bottom: 5px;
+        }
+        .or-txt {
+            margin-bottom: 10px;
+            font-size: 1rem;
+            color: #4f4f4f;
+            font-weight: 500;
         }
 
-        #childrenList input{
+        #childrenList input, .tb-determined input {
             width: auto;
             display: initial;
             margin: 0 10px;
+        }
+
+        .drawer {
+            max-height: 300px;
+            overflow: hidden;
+            transition: max-height 0.5s ease, opacity 0.4s ease;
+            opacity: 1;
+        }
+
+        .drawer.hidden {
+            max-height: 0;
+            opacity: 0;
+            pointer-events: none;
         }
 
         #error-msg{
@@ -174,19 +202,40 @@
                 <div>
                     <label class="required" for="requestType">Request Type:</label>
                     <select id="requestType" required>
-                        <option>Unable to Drive Carpool</option>
-                        <option>Child(ren) Absent from School</option>
-                        <option>Child(ren) Going with Different Carpool</option>
+                        <option value="1">Unable to Drive Carpool</option>
+                        <option value="2">Child(ren) Absent from School</option>
+                        <option value="3">Child(ren) Going with Different Carpool</option>
                     </select>
                 </div>
             </div>
 
-            <div id="childrenList"><span>Enter Carpool ID to see children</span></div>
+            <div id="childrenList">
+                <p class="required">Select affected children:</p>
 
-            <div class="input-group">
-                <div>
-                    <label for="replacementEmail">Replacement Driver Email:</label>
-                    <input type="text" id="replacementEmail">
+                <span id="childrenMessage">Enter Carpool ID to see children</span>
+            
+            </div>
+
+            <div id="replacement-info" class="drawer">
+                <p class="rp-txt">Replacement Info</p>
+                <div class="tb-determined">
+                    <input type="checkbox" name="tb-determined" value="1" id="tb-determined" style="margin-left: 0;">
+                    <label for="tb-determined">To be determined</label>
+                </div>
+
+                <div id="replacement-fields" class="drawer">
+                    <p class="or-txt">or</p>
+                    
+                    <div class="input-group">
+                        <div>
+                            <label for="replacementName">Replacement Driver Name:</label>
+                            <input type="text" id="replacementName">
+                        </div>
+                        <div>
+                            <label for="replacementEmail">Replacement Driver Email:</label>
+                            <input type="text" id="replacementEmail">
+                        </div>
+                    </div>
                 </div>
             </div>
         </form>
@@ -208,22 +257,27 @@
     async function fetchChildren() {
         const carpoolId = document.getElementById('carpoolId').value;
 
+        if (!carpoolId) {
+            return;
+        }
+
+        const messageSpan = document.getElementById('childrenMessage');
+
+        if(isNaN(carpoolId)){
+            messageSpan.textContent = 'Enter a valid Carpool ID';
+            return
+        }
+
         const container = document.getElementById('childrenList');
-        container.innerHTML = '';
 
         try {
             const res = await fetch(`${SCRIPT_URL}?carpoolId=${encodeURIComponent(carpoolId)}`);
             const children = await res.json();
 
             if (!children.length) {
-                container.innerHTML = 'No children found for this Carpool ID';
+                messageSpan.textContent = 'No children found for this Carpool ID';
                 return;
             }
-
-            const heading = document.createElement('p');
-            heading.textContent = 'Select affected children:';
-            heading.classList.add('required');
-            container.appendChild(heading);
 
             children.forEach(name => {
                 const checkbox = document.createElement('input');
@@ -241,9 +295,10 @@
                 div.appendChild(label);
                 container.appendChild(div);
             });
+            messageSpan.textContent = '';
 
         } catch (err) {
-            container.innerHTML = 'Error fetching children';
+            messageSpan.textContent = 'Error fetching children';
             console.error(err);
         }
     }
@@ -253,15 +308,26 @@
         const firstName = document.getElementById('firstName').value;
         const lastName = document.getElementById('lastName').value;
         const email = document.getElementById('email').value;
-        const requestType = document.getElementById('requestType').value;
+        let requestType = document.getElementById('requestType').value;
         const children = Array.from(document.querySelectorAll('input[name="children"]:checked')).map(c => c.value);
+        const replacementName = document.getElementById('replacementName').value;
         const replacementEmail = document.getElementById('replacementEmail').value;
+        const tbDetermined = document.getElementById('tb-determined').checked;
 
         if (!carpoolId || !firstName || !lastName || !email || !requestType) {
             document.getElementById('error-msg').innerHTML = 'Please fill in all required fields.';
             return;
         } else {
             document.getElementById('error-msg').innerHTML = '';
+        }
+
+        if (requestType == '1') {
+            requestType = "Unable to Drive Carpool";
+        }else if (requestType == '2') {
+            requestType = "Child(ren) Absent from School";
+        }
+        else if (requestType == '3') {
+            requestType = "Child(ren) Going with Different Carpool";
         }
 
         const submitBtn = document.getElementById('submitBtn');
@@ -276,6 +342,8 @@
             email: email,
             requestType: requestType,
             children: children,
+            tbDetermined: tbDetermined ? '1' : '0',
+            replacementName: replacementName,
             replacementEmail: replacementEmail,
             submit: "true"
         }).toString();
@@ -293,8 +361,27 @@
             submitBtn.querySelector('.btn-loader').style.display = 'none';
           });
     }
-</script>
 
+    document.getElementById('tb-determined').addEventListener('change', function () {
+        const drawer = document.getElementById('replacement-fields');
+        if (this.checked) {
+            drawer.classList.add('hidden');
+        } else {
+            drawer.classList.remove('hidden');
+        }
+    });
+
+    document.getElementById('requestType').addEventListener('change', function () {
+        const selectedValue = this.value;
+        const replacementInfo = document.getElementById('replacement-info');
+
+        if (selectedValue === '2') {
+            replacementInfo.classList.add('hidden');
+        } else {
+            replacementInfo.classList.remove('hidden');            
+        }
+    });
+</script>
 
 
 
