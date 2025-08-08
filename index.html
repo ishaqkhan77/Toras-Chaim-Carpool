@@ -90,10 +90,9 @@
         }
 
         .rp-txt {
-            text-align: center;
             font-weight: 600;
             color: #4f4f4f;
-            font-size: 1.2rem;
+            font-size: 14px;
         }
 
         button {
@@ -135,7 +134,7 @@
         }
 
         .drawer {
-            max-height: 300px;
+            max-height: 1000px;
             transition: max-height 0.5s ease, opacity 0.4s ease;
             opacity: 1;
         }
@@ -177,11 +176,11 @@
             <div class="input-group">
                 <div>
                     <label class="required" for="firstName">First Name:</label>
-                    <input type="text" id="firstName" required>
+                    <input type="text" id="firstName" required placeholder="Enter your first name">
                 </div>
                 <div>
                     <label class="required" for="lastName">Last Name:</label>
-                    <input type="text" id="lastName" required>
+                    <input type="text" id="lastName" required placeholder="Enter your last name">
                 </div>
             </div>
 
@@ -189,11 +188,11 @@
             <div class="input-group">
                 <div>
                     <label class="required" for="carpoolId">Carpool ID:</label>
-                    <input type="text" id="carpoolId" onblur="fetchChildren()" required>
+                    <input type="text" id="carpoolId" onblur="fetchChildren()" required placeholder="Enter Carpool ID">
                 </div>
                 <div>
                     <label class="required" for="email">Email:</label>
-                    <input type="email" id="email" required>
+                    <input type="email" id="email" required placeholder="Enter your email">
                 </div>
             </div>
 
@@ -210,40 +209,20 @@
 
             <div id="childrenList">
                 <p class="required">Select affected children:</p>
-
                 <span id="childrenMessage">Enter Carpool ID to see children</span>
-            
+                <div class="list"></div>
             </div>
 
             <div id="replacement-info" class="drawer">
-                <p class="rp-txt">Replacement Info</p>
-                <div class="tb-determined">
-                    <input type="checkbox" name="tb-determined" value="1" id="tb-determined" style="margin-left: 0;">
-                    <label for="tb-determined">To be determined</label>
-                </div>
 
-                <div id="replacement-fields" class="drawer">
-                    <p class="or-txt">or</p>
-                    
-                    <div class="input-group">
-                        <div>
-                            <label for="replacementName">Replacement Driver Name:</label>
-                            <input type="text" id="replacementName">
-                        </div>
-                        <div>
-                            <label for="replacementEmail">Replacement Driver Email:</label>
-                            <input type="text" id="replacementEmail">
-                        </div>
-                    </div>
-                </div>
             </div>
         </form>
     </div>
     <div class="card-footer">
         <span id="error-msg"></span>
         <button id="submitBtn" onclick="handleSubmit()">
-          <span class="btn-text">Submit</span>
-          <span class="btn-loader" style="display: none;"><img src="/loader.gif" style="width: 20px"></span>
+            <span class="btn-text">Submit</span>
+            <span class="btn-loader" style="display: none;"><img src="/loader.gif" style="width: 20px"></span>
         </button>
     </div>
 </div>
@@ -251,7 +230,7 @@
 </body>
 </html>
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzTKcBZFMmXo0PzPiS1pV9-kEAZytdrJZ6UO0U6TkJYZ1dt2rc1ljuCMhKZC9Bne1-RLA/exec"; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzTKcBZFMmXo0PzPiS1pV9-kEAZytdrJZ6UO0U6TkJYZ1dt2rc1ljuCMhKZC9Bne1-RLA/exec";
 
     async function fetchChildren() {
         const carpoolId = document.getElementById('carpoolId').value;
@@ -267,7 +246,8 @@
             return
         }
 
-        const container = document.getElementById('childrenList');
+        const container = document.querySelector('#childrenList .list');
+        container.innerHTML = '';
 
         try {
             const res = await fetch(`${SCRIPT_URL}?carpoolId=${encodeURIComponent(carpoolId)}`);
@@ -282,6 +262,8 @@
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.name = 'children';
+                checkbox.className = 'child-checkbox';
+                checkbox.dataset.name = name.replace(/\s+/g, '-');
                 checkbox.value = name;
                 checkbox.id = `child-${name.replace(/\s+/g, '-')}`;
 
@@ -302,22 +284,130 @@
         }
     }
 
+    document.addEventListener('change', function (e) {
+        if (e.target.classList.contains('child-checkbox')) {
+            const childName = e.target.getAttribute('data-name');
+            const container = document.getElementById('replacement-info');
+            const existing = document.getElementById(`replacement-${childName}`);
+
+            if (e.target.checked) {
+                if (!existing) {
+
+                    const div = document.createElement('div');
+                    div.className = 'replacement-box drawer hidden';
+                    div.id = `replacement-${childName}`;
+                    div.innerHTML = `
+
+                    <p class="rp-txt">Alternative Driver for ${e.target.value}</p>
+                    <div class="tb-determined">
+                        <input type="checkbox" name="tbDetermined_${childName}" data-child-name="${childName}" value="1" class="childTbd" id="tbDetermined_${childName}"
+                               style="margin-left: 0;">
+                        <label for="tbDetermined_${childName}">To Be Determined</label>
+                    </div>
+
+                    <div id="replacementDetails_${childName}" class="drawer">
+
+                        <p class="or-txt">or</p>
+                        <div class="input-group">
+                            <div>
+                                <label for="replacementName_${childName}">Driver Name:</label>
+                                <input type="text" id="replacementName_${childName}" placeholder="Driver Name">
+                            </div>
+                            <div>
+                                <label for="replacementEmail_${childName}">Driver Email:</label>
+                                <input type="text" id="replacementEmail_${childName}" placeholder="Driver Email">
+                            </div>
+                        </div>
+                    </div>
+                `;
+                    container.appendChild(div);
+                    div.classList.remove('hidden');
+                }else {
+                    existing.classList.remove('hidden');
+                }
+            } else {
+                if (existing) {
+                    existing.classList.add('hidden');
+                }
+            }
+        }
+
+        if (e.target && e.target.classList.contains('childTbd')) {
+            const checkbox = e.target;
+            const childName = checkbox.dataset.childName;
+            const drawer = document.getElementById('replacementDetails_' + childName);
+
+            if (checkbox.checked) {
+                drawer.classList.add('hidden');
+            } else {
+                drawer.classList.remove('hidden');
+            }
+        }
+    });
+
     async function handleSubmit() {
         const carpoolId = document.getElementById('carpoolId').value;
         const firstName = document.getElementById('firstName').value;
         const lastName = document.getElementById('lastName').value;
         const email = document.getElementById('email').value;
         let requestType = document.getElementById('requestType').value;
+        const replacementsData = {};
         const children = Array.from(document.querySelectorAll('input[name="children"]:checked')).map(c => c.value);
-        const replacementName = document.getElementById('replacementName').value;
-        const replacementEmail = document.getElementById('replacementEmail').value;
-        const tbDetermined = document.getElementById('tb-determined').checked;
+        const childNames = Array.from(document.querySelectorAll('input[name="children"]:checked')).map(c => c.dataset.name);
 
         if (!carpoolId || !firstName || !lastName || !email || !requestType) {
             document.getElementById('error-msg').innerHTML = 'Please fill in all required fields.';
             return;
         } else {
             document.getElementById('error-msg').innerHTML = '';
+        }
+
+        if(requestType !== "2"){
+            const replacementInfo = document.getElementById('replacement-info');
+            const replacementBoxes = replacementInfo.querySelectorAll('.replacement-box');
+            let error = false;
+            for (const box of replacementBoxes) {
+                const tbCheckbox = box.querySelector('.childTbd');
+                const childName = tbCheckbox.dataset.childName;
+                const replacementNameInput = box.querySelector(`#replacementName_${childName}`);
+                const replacementEmailInput = box.querySelector(`#replacementEmail_${childName}`);
+
+                if (!childNames.includes(childName)) {
+                    continue;
+                }
+
+                if (tbCheckbox.checked) {
+                    replacementNameInput.value = '';
+                    replacementEmailInput.value = '';
+                } else {
+                    if (!replacementNameInput.value || !replacementEmailInput.value) {
+                        document.getElementById('error-msg').innerHTML = 'Please fill out driver details';
+                        error = true;
+                        break;
+                    } else {
+                        document.getElementById('error-msg').innerHTML = '';
+                    }
+                }
+            }
+
+            if (error) {
+                return;
+            }
+
+            replacementBoxes.forEach(box => {
+                const tbCheckbox = box.querySelector('.childTbd');
+                const childName = tbCheckbox.dataset.childName;
+                const isTBD = tbCheckbox.checked ? 1 : 0;
+
+                if (isTBD === 1) {
+                    replacementsData[childName] = { "TBD": 1 };
+                } else {
+                    replacementsData[childName] = {
+                        "DriverName": box.querySelector(`#replacementName_${childName}`).value.trim(),
+                        "DriverEmail": box.querySelector(`#replacementEmail_${childName}`).value.trim()
+                    };
+                }
+            });
         }
 
         if (requestType == '1') {
@@ -341,33 +431,35 @@
             email: email,
             requestType: requestType,
             children: children,
-            tbDetermined: tbDetermined ? '1' : '0',
-            replacementName: replacementName,
-            replacementEmail: replacementEmail,
+            replacementData: JSON.stringify(replacementsData),
             submit: "true"
         }).toString();
 
         fetch(SCRIPT_URL + "?" + params)
-          .then(res => res.json())
-          .then(result => {
-              document.getElementsByClassName('alert-success')[0].style.display = 'block'
-              window.scrollTo(0, 0);
-              document.getElementById('carpoolForm').reset();
-              document.getElementById('childrenList').innerHTML = '';
-
-            submitBtn.disabled = false;
-            submitBtn.querySelector('.btn-text').style.display = 'inline';
-            submitBtn.querySelector('.btn-loader').style.display = 'none';
-          });
+            .then(res => res.json())
+            .then(result => {
+                document.getElementsByClassName('alert-success')[0].style.display = 'block'
+                window.scrollTo(0, 0);
+                document.getElementById('carpoolForm').reset();
+                document.getElementById('replacement-info').innerHTML = '';
+                document.querySelector('#childrenList .list').innerHTML = '';
+                submitBtn.disabled = false;
+                submitBtn.querySelector('.btn-text').style.display = 'inline';
+                submitBtn.querySelector('.btn-loader').style.display = 'none';
+            });
     }
 
-    document.getElementById('tb-determined').addEventListener('change', function () {
-        const drawer = document.getElementById('replacement-fields');
-        if (this.checked) {
-            drawer.classList.add('hidden');
-        } else {
-            drawer.classList.remove('hidden');
-        }
+    document.querySelectorAll('.childTbd').forEach(function (checkbox) {
+        const childName = checkbox.dataset.childName;
+        const drawer = document.getElementById('replacementDetails_' + childName);
+
+        checkbox.addEventListener('change', function () {
+            if (this.checked) {
+                drawer.classList.add('hidden');
+            } else {
+                drawer.classList.remove('hidden');
+            }
+        });
     });
 
     document.getElementById('requestType').addEventListener('change', function () {
@@ -377,32 +469,7 @@
         if (selectedValue === '2') {
             replacementInfo.classList.add('hidden');
         } else {
-            replacementInfo.classList.remove('hidden');            
+            replacementInfo.classList.remove('hidden');
         }
     });
 </script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
