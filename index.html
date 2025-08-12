@@ -349,10 +349,8 @@
         const carpoolId = document.getElementById('carpoolId').value;
         const firstName = document.getElementById('firstName').value;
         const lastName = document.getElementById('lastName').value;
-        const email = document.getElementById('email').value;
+        const email = document.getElementById('email').value.trim();
         let requestType = document.getElementById('requestType').value;
-        const replacementsData = {};
-        const children = Array.from(document.querySelectorAll('input[name="children"]:checked')).map(c => c.value);
         const childNames = Array.from(document.querySelectorAll('input[name="children"]:checked')).map(c => c.dataset.name);
 
         if (!carpoolId || !firstName || !lastName || !email || !requestType) {
@@ -362,6 +360,7 @@
             document.getElementById('error-msg').innerHTML = '';
         }
 
+        const childrenAffected = [];
         if(requestType !== "2"){
             const replacementInfo = document.getElementById('replacement-info');
             const replacementBoxes = replacementInfo.querySelectorAll('.replacement-box');
@@ -400,13 +399,21 @@
                 const isTBD = tbCheckbox.checked ? 1 : 0;
 
                 if (isTBD === 1) {
-                    replacementsData[childName] = { "TBD": 1 };
+                    childrenAffected.push({
+                        Name: childName,
+                        TBD: true
+                    });
                 } else {
-                    replacementsData[childName] = {
-                        "DriverName": box.querySelector(`#replacementName_${childName}`).value.trim(),
-                        "DriverEmail": box.querySelector(`#replacementEmail_${childName}`).value.trim()
-                    };
+                    childrenAffected.push({
+                        Name: childName,
+                        DriverName: box.querySelector(`#replacementName_${childName}`).value.trim(),
+                        DriverEmail: box.querySelector(`#replacementEmail_${childName}`).value.trim()
+                    });
                 }
+            });
+        }else{
+            childNames.forEach(name => {
+                childrenAffected.push({ Name: name });
             });
         }
 
@@ -430,8 +437,7 @@
             lastName: lastName,
             email: email,
             requestType: requestType,
-            children: children,
-            replacementData: JSON.stringify(replacementsData),
+            replacementData: JSON.stringify({ ChildrenAffected: childrenAffected }),
             submit: "true"
         }).toString();
 
@@ -473,3 +479,4 @@
         }
     });
 </script>
+
